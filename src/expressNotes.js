@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.get("/", (req, res)=>{
     res.status(201).send("Hello World");
 });
-const mockUsers = [{id:1, "Name": "John"}, {id:2, "Name": "Doe"}, {id:3, "Name": "Jane"}];
+// const mockUsers = [{id:1, "Name": "John"}, {id:2, "Name": "Doe"}, {id:3, "Name": "Jane"}];
 app.get("/api/users", (req, res)=>{
     res.send(mockUsers);
 });
@@ -43,8 +43,8 @@ with ?filter=Name&value=Il  will give
 
 import express, { response } from 'express';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// const app = express();
+// const PORT = process.env.PORT || 3000;
 
 app.get("/", (req, res)=>{
     res.status(201).send("Hello World");
@@ -88,6 +88,6 @@ app.listen(PORT, ()=>{
 });
 
 
-//Holy Moly code for now😒😁😂
+/////////////////////////////////////////
 
 
