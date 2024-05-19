@@ -10,6 +10,7 @@ let books = [
     { id: 1, title: 'Book 1', author: 'Author 1', genre: 'Genre 1', price: 100 },
     { id: 2, title: 'Book 2', author: 'Author 2', genre: 'Genre 2', price: 200 },
     { id: 3, title: 'Book 3', author: 'Author 3', genre: 'Genre 3', price: 300 },
+
   ];
   
   // Routes
@@ -36,7 +37,11 @@ let books = [
   
   app.put('/books/:id', (req, res) => {
     const { id } = req.params;
-    const updatedBook = req.body;
+    const updatedBook = req.body; 
+    if (books.find(book => book.id == updatedBook.id)) {
+      res.status(400).json({ message: 'Book already exists' });
+      return;
+    }
     const index = books.findIndex(book => book.id == id);
   
     if (index !== -1) {
