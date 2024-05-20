@@ -25,43 +25,30 @@ const mockDAta =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.patch("/api/users/update/:id", (req, res)=>{
-  try{
-    const id = parseInt(req.params.id);
-    const newUser = newUserSchema.safeParse({id: id, ...req.body});
-    if(!newUser.success) return res.status(400).send(newUser.error.issues);
-    console.log(newUser);
-    const findUser = mockDAta.find((user)=> user.id === id);
-    if(!findUser) return res.status(404).send("User not found");
-    console.log(findUser);
-    findUser.userName = newUser.data.userName;
-    findUser.displayName = newUser.data.displayName;
-    res.send(findUser);
-  }catch(error){
-    res.status(500).send(error.message);
-  }
-});
-
-app.get("/api/users/updated", (req, res)=>{
-  res.send(mockDAta);
-
-});
-
-app.put("/api/users/change/:id", (req, res)=>{
-  try{
-    const id = parseInt(req.params.id);
-    
-    const newUser = {...newUserSchema.safeParse(req.body).data};
-    if(!newUser.success) return res.status(400).send(newUser.error.issues);
-    const findUser = mockDAta.findIndex((user)=> user.id === id);
-    console.log(findUser);
-    if(findUser === -1) return res.status(404).send("User not found");
-    mockDAta[findUser] = newUser.data;
-    res.send(mockDAta[findUser]);
-  }catch(e){
+app.put("/api/users/change/:id", (req, res) => {
+  try {
+    const id = parseInt(req.params.id); // Extract id from URL
+    const newUser = {id: req.body.id,/*or just id or id: id for old id value */ ...newUserSchema.safeParse(req.body).data }; // Merge id with parsed body data
+    const validationResult = newUserSchema.safeParse(req.body);
+    if (!validationResult.success) return res.status(400).send(validationResult.error.issues);
+    const findUserIndex = mockDAta.findIndex((user) => user.id === id);
+    if (findUserIndex === -1) return res.status(404).send("User not found");
+    mockDAta[findUserIndex] = newUser;
+    res.send(mockDAta[findUserIndex]);
+  } catch (e) {
     res.status(500).send(e.message);
   }
 });
+
+
+app.get("/api/users/data", (req, res) => {
+  try {
+    res.send(mockDAta);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
 
 app.listen(port, ()=> 
   console.log(`listening on port ${port}`));
