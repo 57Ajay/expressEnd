@@ -25,30 +25,24 @@ const mockDAta =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.put("/api/users/change/:id", (req, res) => {
-  try {
-    const id = parseInt(req.params.id); // Extract id from URL
-    const newUser = {id: req.body.id,/*or just id or id: id for old id value */ ...newUserSchema.safeParse(req.body).data }; // Merge id with parsed body data
-    const validationResult = newUserSchema.safeParse(req.body);
-    if (!validationResult.success) return res.status(400).send(validationResult.error.issues);
-    const findUserIndex = mockDAta.findIndex((user) => user.id === id);
-    if (findUserIndex === -1) return res.status(404).send("User not found");
-    mockDAta[findUserIndex] = newUser;
-    res.send(mockDAta[findUserIndex]);
-  } catch (e) {
-    res.status(500).send(e.message);
+app.delete("/users/delete/:id", (req, res) =>{
+  const id = parseInt(req.params.id); // Parse the id correctly
+  const findUser = mockDAta.findIndex((user)=> user.id === id);
+  if (findUser === -1) { // Check if the user exists
+    return res.status(404).json({ message: "User not found" });
   }
+  const deletedUser = mockDAta[findUser]; // Retrieve the user before splicing
+  mockDAta.splice(findUser, 1);
+  res.status(200).json({
+    message: "User deleted successfully",
+    deletedUser: deletedUser
+  });
 });
 
 
-app.get("/api/users/data", (req, res) => {
-  try {
-    res.send(mockDAta);
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
+app.get("/users/remain", (req, res) =>{
+  res.status(200).json(mockDAta);
 });
-
 
 app.listen(port, ()=> 
   console.log(`listening on port ${port}`));
