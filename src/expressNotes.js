@@ -83,6 +83,26 @@ app.get("/api/users/:id", (req, res)=>{
     return res.send(findUser);
 });
 
+app.post('/api/users/add', (req, res)=>{
+    try{
+      const id = mockDAta.length + 1;
+      const newUser = {id: id, ...newUserSchema.parse(req.body)};
+      const duplicate = mockDAta.find((user)=> user.userName === newUser.userName);
+      if(duplicate){
+        throw new Error("User already exists");
+      }
+      mockDAta.push(newUser);
+      console.log(newUser);
+      res.send(newUser);
+    }catch(e){
+      res.status(400).send(e.message);
+    }
+  })
+  
+  app.get('/api/users/get', (req, res)=>{
+    res.send(mockDAta);
+  })
+
 app.listen(PORT, ()=>{
     console.log("Running on port", PORT);
 });
@@ -91,3 +111,48 @@ app.listen(PORT, ()=>{
 /////////////////////////////////////////
 
 
+//Adding some simple and effective methods on Users data
+
+/*
+import express from "express";
+
+const app = express();
+
+// app.use(express.json());
+const port = 3000;
+*/
+const mockDAta =[
+  {id: 1, userName: "James", displayName: "James"},
+  {id: 2, userName: "William", displayName: "william"},
+  {id: 3, userName: "John", displayName: "John"},
+  {id: 4, userName: "Johnny", displayName: "johnny"},
+  {id: 5, userName: "jimmy", displayName: "jimmy"},
+  {id: 6, userName: "Doe", displayName: "Doe"},
+  {id: 7, userName: "Jane", displayName: "Jane"},
+  {id: 8, userName: "Chris", displayName: "Chris"},
+  {id: 9, userName: "Tony", displayName: "Tony"},
+  {id: 10, userName: "Laura", displayName: "Laura"},
+];
+
+app.get("/api/users/userName", (req, res) => {
+  const filter = req.query.filter;
+  if (!filter) return res.send("Provide filter query to filter by userName");
+  const filteredUsers = mockDAta.filter((user)=>
+  user.userName.toLowerCase().includes(filter.toLowerCase()));
+  if (filteredUsers.length === 0) return res.send("User(s) not found");
+  res.send(filteredUsers);
+})
+
+
+// to find users via userName or DisplayName
+// filter=userName&value=j (example query)
+
+app.get("/api/users", (req, res)=>{
+  const { query: {filter, value}} = req;
+  if (!filter && !value) return res.send(mockDAta);
+  if (filter && value) return res.send(mockDAta.filter((user)=> user[filter].includes(value)));
+})
+
+
+// app.listen(port, ()=> 
+//   console.log(`listening on port ${port}`));

@@ -1,8 +1,15 @@
 import express from "express";
+import { object, string, number } from "zod";
+
 
 const app = express();
+app.use(express.json());
+const newUserSchema = object({
+  userName: string(),
+  displayName: string(),
+});
 
-// app.use(express.json());
+
 const port = 3000;
 
 const mockDAta =[
@@ -18,23 +25,24 @@ const mockDAta =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.get("/api/users/userName", (req, res) => {
-  const filter = req.query.filter;
-  if (!filter) return res.send("Provide filter query to filter by userName");
-  const filteredUsers = mockDAta.filter((user)=>
-  user.userName.includes(filter));
-  if (filteredUsers.length === 0) return res.send("User(s) not found");
-  res.send(filteredUsers);
+app.post('/api/users/add', (req, res)=>{
+  try{
+    const id = mockDAta.length + 1;
+    const newUser = {id: id, ...newUserSchema.parse(req.body)};
+    const duplicate = mockDAta.find((user)=> user.userName === newUser.userName);
+    if(duplicate){
+      throw new Error("User already exists");
+    }
+    mockDAta.push(newUser);
+    console.log(newUser);
+    res.send(newUser);
+  }catch(e){
+    res.status(400).send(e.message);
+  }
 })
 
-
-// to find users via userName or DisplayName
-// filter=userName&value=j (example query)
-
-app.get("/api/users", (req, res)=>{
-  const { query: {filter, value}} = req;
-  if (!filter && !value) return res.send(mockDAta);
-  if (filter && value) return res.send(mockDAta.filter((user)=> user[filter].includes(value)));
+app.get('/api/users/get', (req, res)=>{
+  res.send(mockDAta);
 })
 
 
