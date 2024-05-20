@@ -93,7 +93,7 @@ app.post('/api/users/add', (req, res)=>{
       }
       mockDAta.push(newUser);
       console.log(newUser);
-      res.send(newUser);
+      res.status(201).send(newUser);
     }catch(e){
       res.status(400).send(e.message);
     }
@@ -112,13 +112,17 @@ app.listen(PORT, ()=>{
 
 
 //Adding some simple and effective methods on Users data
-
+//With express and zod
 /*
 import express from "express";
 
 const app = express();
 
 // app.use(express.json());
+const newUserSchema = object({
+  userName: string(),
+  displayName: string(),
+});
 const port = 3000;
 */
 const mockDAta =[
@@ -152,7 +156,29 @@ app.get("/api/users", (req, res)=>{
   if (!filter && !value) return res.send(mockDAta);
   if (filter && value) return res.send(mockDAta.filter((user)=> user[filter].includes(value)));
 })
-
+app.patch("/api/users/update/:id", (req, res)=>{
+    try{
+      const id = parseInt(req.params.id);
+      const newUser = newUserSchema.safeParse({id: id, ...req.body});
+      if(!newUser.success) return res.status(400).send(newUser.error.issues);
+      console.log(newUser);
+      const findUser = mockDAta.find((user)=> user.id === id);
+      if(!findUser) return res.status(404).send("User not found");
+      console.log(findUser);
+      findUser.userName = newUser.data.userName;
+      findUser.displayName = newUser.data.displayName;
+      res.send(findUser);
+    }catch(error){
+      res.status(500).send(error.message);
+    }
+  });
+  
+  app.get("/api/users/updated", (req, res)=>{
+    res.send(mockDAta);
+  
+  });
+  
+  
 
 // app.listen(port, ()=> 
 //   console.log(`listening on port ${port}`));

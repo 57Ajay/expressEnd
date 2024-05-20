@@ -1,5 +1,5 @@
 import express from "express";
-import { object, string, number } from "zod";
+import { object, string, number, boolean } from "zod";
 
 
 const app = express();
@@ -25,26 +25,43 @@ const mockDAta =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.post('/api/users/add', (req, res)=>{
+app.patch("/api/users/update/:id", (req, res)=>{
   try{
-    const id = mockDAta.length + 1;
-    const newUser = {id: id, ...newUserSchema.parse(req.body)};
-    const duplicate = mockDAta.find((user)=> user.userName === newUser.userName);
-    if(duplicate){
-      throw new Error("User already exists");
-    }
-    mockDAta.push(newUser);
+    const id = parseInt(req.params.id);
+    const newUser = newUserSchema.safeParse({id: id, ...req.body});
+    if(!newUser.success) return res.status(400).send(newUser.error.issues);
     console.log(newUser);
-    res.send(newUser);
-  }catch(e){
-    res.status(400).send(e.message);
+    const findUser = mockDAta.find((user)=> user.id === id);
+    if(!findUser) return res.status(404).send("User not found");
+    console.log(findUser);
+    findUser.userName = newUser.data.userName;
+    findUser.displayName = newUser.data.displayName;
+    res.send(findUser);
+  }catch(error){
+    res.status(500).send(error.message);
   }
-})
+});
 
-app.get('/api/users/get', (req, res)=>{
+app.get("/api/users/updated", (req, res)=>{
   res.send(mockDAta);
-})
 
+});
+
+app.put("/api/users/change/:id", (req, res)=>{
+  try{
+    const id = parseInt(req.params.id);
+    
+    const newUser = {...newUserSchema.safeParse(req.body).data};
+    if(!newUser.success) return res.status(400).send(newUser.error.issues);
+    const findUser = mockDAta.findIndex((user)=> user.id === id);
+    console.log(findUser);
+    if(findUser === -1) return res.status(404).send("User not found");
+    mockDAta[findUser] = newUser.data;
+    res.send(mockDAta[findUser]);
+  }catch(e){
+    res.status(500).send(e.message);
+  }
+});
 
 app.listen(port, ()=> 
   console.log(`listening on port ${port}`));
