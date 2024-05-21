@@ -1,5 +1,6 @@
 import express from "express";
-import { number, object, string } from "zod";
+import { object, string } from "zod";
+import { check, validationResult } from "express-validator";
 
 
 const app = express();
@@ -34,7 +35,7 @@ const duplicateCheckMiddleware = (req, res, next)=>{
     return;
   }
   next();
-}
+};
 
 app.use(loggingMiddleware, (req, res, next)=>{
   console.log("finished logging ....");
@@ -65,7 +66,21 @@ app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   next();
 });
 
-app.post("/users", duplicateCheckMiddleware, (req, res, next) => {
+app.post("/users", [
+  check("userName")
+    .exists()
+    .isString()
+    .notEmpty(),
+  check("displayName")
+    .exists()
+    .isString()
+    .notEmpty(),
+], duplicateCheckMiddleware, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const id = mockUserData.length + 1;
   const newUser = {id : id, ...newUserSchema.parse(req.body)};
   mockUserData.push(newUser);
