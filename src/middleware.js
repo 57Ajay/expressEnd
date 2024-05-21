@@ -23,6 +23,16 @@ const loggingMiddleware = (req, res, next) => {
  * to the next middleware or the url with which it was called
  */
 
+const resolveIndexByUserId = (req, res, next)=>{
+  const {params: {id}} = req;
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return res.sendStatus(400);
+  const findUserIndex = mockUserData.findIndex((user) => user.id === parsedId);
+  if (findUserIndex === -1) return res.sendStatus(404);
+  req.findUserIndex = findUserIndex;
+  next();
+};
+
 
 const mockUserData =[
   {id: 1, userName: "James", displayName: "James"},
@@ -40,6 +50,46 @@ const mockUserData =[
 app.get("/users", loggingMiddleware, (req, res) => {
   res.json(mockUserData);
 });
+
+
+app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
+  const {findUserIndex} = req;
+  res.send(mockUserData[findUserIndex]);
+  next();
+});
+
+app.put("/users/:id", resolveIndexByUserId, (req, res, next) => {
+  const {findUserIndex} = req;
+  const {userName, displayName} = newUserSchema.parse(req.body);
+
+  const userToBeUpdated = mockUserData[findUserIndex];
+
+  mockUserData[findUserIndex] = {id:parseInt(req.params.id) ,userName, displayName};
+  res.status(200).json({
+    msg: "User updated",
+    userToBeUpdated: userToBeUpdated,
+    newUpdatedUserData: mockUserData[findUserIndex],
+  });
+  next();
+})
+
+app.patch("/users/:id", resolveIndexByUserId, (req, res, next)=>{
+  const {body, findUserIndex} = req;
+  mockUserData[findUserIndex] = {...mockUserData[findUserIndex], ...body};
+  res.send(mockUserData[findUserIndex]);
+  next();
+})
+
+app.delete("/users/:id", resolveIndexByUserId, (req, res, next)=>{
+  const {findUserIndex} = req;
+  const userToBeDeleted = mockUserData[findUserIndex];
+  mockUserData.splice(findUserIndex, 1)
+  res.status(200).json({
+    msg: "User deleted",
+    DeletedUserData: userToBeDeleted
+  });
+  next();
+})
 
 
 app.listen(port, ()=> 

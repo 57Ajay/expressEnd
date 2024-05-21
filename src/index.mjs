@@ -43,20 +43,6 @@ const mockUserData =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.put("/users/:id", resolveIndexByUserId, (req, res, next) => {
-  const {findUserIndex} = req;
-  const {userName, displayName} = newUserSchema.parse(req.body);
-
-  const userToBeUpdated = mockUserData[findUserIndex];
-
-  mockUserData[findUserIndex] = {id:req.params.id ,userName, displayName};
-  res.status(200).json({
-    msg: "User updated",
-    userToBeUpdated: userToBeUpdated,
-    newUpdatedUserData: mockUserData[findUserIndex],
-  });
-  next();
-})
 
 app.get("/users", (req, res) => {
   res.json(mockUserData);
@@ -64,11 +50,10 @@ app.get("/users", (req, res) => {
 
 app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   const {findUserIndex} = req;
-  console.log(findUserIndex);
-  console.log(mockUserData[findUserIndex]);
   res.send(mockUserData[findUserIndex]);
   next();
 });
+
 
 app.listen(port, ()=> 
   console.log(`listening on port ${port}`));
