@@ -1,6 +1,6 @@
 import express from "express";
 import { object, string } from "zod";
-import { check, validationResult } from "express-validator";
+import { check, validationResult, query } from "express-validator";
 
 
 const app = express();
@@ -28,6 +28,10 @@ const resolveIndexByUserId = (req, res, next)=>{
 
 const duplicateCheckMiddleware = (req, res, next)=>{
   const {body: newUser} = req;
+  /** why not {body: {newUser}} but {body: newUser} because to check 
+   * duplicate we will need to get userName which we will get from req.body.userName but if we use {body: newUser} this will imply 
+   *we will need to get userName from req.newUser which will be undefined
+   */
   const duplicate = mockUserData.find((user)=> user.userName === newUser.userName);
   if(duplicate){
     res.sendStatus(409);
@@ -63,6 +67,20 @@ app.get("/users", (req, res) => {
 app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   const {findUserIndex} = req;
   res.send(mockUserData[findUserIndex]);
+  next();
+});
+
+app.get("/api/users", query("filter").isString().notEmpty().optional(), query("value").isString().notEmpty().isLength({min: 1}).optional(), (req, res, next) => {
+  const errors = validationResult(req);
+  console.log(errors);
+  const {query: {filter, value}} = req;
+  if (!filter && !value) return res.send(mockUserData);
+  if (!filter || !value) return res.json({
+    msg: "Provide both filter and value",
+    context: "filter can be userName and displayName and value can be anything but it should be a string",
+    example: "/api/users?filter=userName&value=John"});
+
+  if (filter && value) return res.send(mockUserData.filter((user)=> user[filter].toLowerCase().includes(value.toLowerCase())));
   next();
 });
 

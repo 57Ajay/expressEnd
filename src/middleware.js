@@ -2,7 +2,7 @@
 
 import express from "express";
 import { object, string } from "zod";
-import { check, validationResult } from "express-validator";
+import { check, validationResult, query } from "express-validator";
 
 const app = express();
 app.use(express.json());
@@ -70,6 +70,21 @@ app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   next();
 });
 
+app.get("/api/users", query("filter").isString().notEmpty().optional(), query("value").isString().notEmpty().isLength({min: 1}).optional(), (req, res, next) => {
+  const errors = validationResult(req);
+  console.log(errors);
+  const {query: {filter, value}} = req;
+  if (!filter && !value) return res.send(mockUserData);
+  if (!filter || !value) return res.json({
+    msg: "Provide both filter and value",
+    context: "filter can be userName and displayName and value can be anything but it should be a string",
+    example: "/api/users?filter=userName&value=John"});
+
+  if (filter && value) return res.send(mockUserData.filter((user)=> user[filter].toLowerCase().includes(value.toLowerCase())));
+  next();
+});
+
+
 app.put("/users/:id", resolveIndexByUserId, (req, res, next) => {
   const {findUserIndex} = req;
   const {userName, displayName} = newUserSchema.parse(req.body);
@@ -113,7 +128,7 @@ app.post("/users", [
     .isString()
     .notEmpty(),
 ], duplicateCheckMiddleware, (req, res, next) => {
-  
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
