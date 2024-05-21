@@ -1,18 +1,36 @@
 import express from "express";
-import { object, string, number, boolean } from "zod";
+import { number, object, string } from "zod";
 
 
 const app = express();
 app.use(express.json());
+const port = 3000;
+
 const newUserSchema = object({
   userName: string(),
   displayName: string(),
 });
 
+const loggingMiddleware = (req, res, next) => {
+  console.log(`${req.method} - ${req.url}`);
+  next();
+};
+const resolveIndexByUserId = (req, res, next)=>{
+  const {params: {id}} = req;
+  const parsedId = parseInt(id);
+  if (isNaN(parsedId)) return res.sendStatus(400);
+  const findUserIndex = mockUserData.findIndex((user) => user.id === parsedId);
+  if (findUserIndex === -1) return res.sendStatus(404);
+  req.findUserIndex = findUserIndex;
+  next();
+};
 
-const port = 3000;
+app.use(loggingMiddleware, (req, res, next)=>{
+  console.log("finished logging ....");
+  next();
+});
 
-const mockDAta =[
+const mockUserData =[
   {id: 1, userName: "James", displayName: "James"},
   {id: 2, userName: "William", displayName: "william"},
   {id: 3, userName: "John", displayName: "John"},
@@ -25,23 +43,31 @@ const mockDAta =[
   {id: 10, userName: "Laura", displayName: "Laura"},
 ];
 
-app.delete("/users/delete/:id", (req, res) =>{
-  const id = parseInt(req.params.id); // Parse the id correctly
-  const findUser = mockDAta.findIndex((user)=> user.id === id);
-  if (findUser === -1) { // Check if the user exists
-    return res.status(404).json({ message: "User not found" });
-  }
-  const deletedUser = mockDAta[findUser]; // Retrieve the user before splicing
-  mockDAta.splice(findUser, 1);
+app.put("/users/:id", resolveIndexByUserId, (req, res, next) => {
+  const {findUserIndex} = req;
+  const {userName, displayName} = newUserSchema.parse(req.body);
+
+  const userToBeUpdated = mockUserData[findUserIndex];
+
+  mockUserData[findUserIndex] = {id:req.params.id ,userName, displayName};
   res.status(200).json({
-    message: "User deleted successfully",
-    deletedUser: deletedUser
+    msg: "User updated",
+    userToBeUpdated: userToBeUpdated,
+    newUpdatedUserData: mockUserData[findUserIndex],
   });
+  next();
+})
+
+app.get("/users", (req, res) => {
+  res.json(mockUserData);
 });
 
-
-app.get("/users/remain", (req, res) =>{
-  res.status(200).json(mockDAta);
+app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
+  const {findUserIndex} = req;
+  console.log(findUserIndex);
+  console.log(mockUserData[findUserIndex]);
+  res.send(mockUserData[findUserIndex]);
+  next();
 });
 
 app.listen(port, ()=> 

@@ -61,6 +61,8 @@ const mockUsers =
   {id:8, "Name": "Yashvi","displayName": "Yashvi"},
   {id:9, "Name": "Sam","displayName": "sam"},
   {id:10, "Name": "Illiya","displayName": "illiya"}];
+
+
 app.get("/api/users", (req, res)=>{
     console.log(req.query);
     const {query: {filter, value}} = req;
@@ -173,10 +175,9 @@ app.patch("/api/users/update/:id", (req, res)=>{
     }
   });
   
-  app.get("/api/users/updated", (req, res)=>{
-    res.send(mockDAta);
-  
-  });
+app.get("/api/users/updated", (req, res)=>{
+  res.send(mockDAta);
+});
   
   
 app.put("/api/users/change/:id", (req, res) => {
@@ -195,16 +196,35 @@ app.put("/api/users/change/:id", (req, res) => {
   });
   
   
-  app.get("/api/users/data", (req, res) => {
-    try {
-      res.send(mockDAta);
+app.get("/api/users/data", (req, res) => {
+  try {
+    res.send(mockDAta);
     } catch (e) {
       res.status(500).send(e.message);
     }
   });
   
   
+app.delete("/users/delete/:id", (req, res) =>{
+  const id = parseInt(req.params.id); // Parse the id correctly
+  const findUser = mockDAta.findIndex((user)=> user.id === id);
+  if (findUser === -1) { // Check if the user exists
+    return res.status(404).json({ message: "User not found" });
+  }
+  const deletedUser = mockDAta[findUser]; // Retrieve the user before splicing
+  mockDAta.splice(findUser, 1);
+  res.status(200).json({
+    message: "User deleted successfully",
+    deletedUser: deletedUser
+  });
+});
+  
+  
+app.get("/users/remain", (req, res) =>{
+  res.status(200).json(mockDAta);
+});
   
 
 // app.listen(port, ()=> 
 //   console.log(`listening on port ${port}`));
+
