@@ -25,6 +25,17 @@ const resolveIndexByUserId = (req, res, next)=>{
   next();
 };
 
+const duplicateCheckMiddleware = (req, res, next)=>{
+  const {body: newUser} = req;
+  const duplicate = mockUserData.find((user)=> user.userName === newUser.userName);
+  if(duplicate){
+    res.sendStatus(409);
+    console.log("duplicate Users cannot be created");
+    return;
+  }
+  next();
+}
+
 app.use(loggingMiddleware, (req, res, next)=>{
   console.log("finished logging ....");
   next();
@@ -54,6 +65,14 @@ app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   next();
 });
 
+app.post("/users", duplicateCheckMiddleware, (req, res, next) => {
+  const id = mockUserData.length + 1;
+  const newUser = {id : id, ...newUserSchema.parse(req.body)};
+  mockUserData.push(newUser);
+  console.log(newUser);
+  res.status(201).send(newUser);
+  next();
+});
 
 app.listen(port, ()=> 
   console.log(`listening on port ${port}`));
