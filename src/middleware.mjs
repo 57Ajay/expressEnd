@@ -2,7 +2,9 @@
 
 import express from "express";
 import { object, string } from "zod";
-import { check, validationResult, query } from "express-validator";
+import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
+import { createUserSchema } from './utils/validationSchemas.mjs'
+
 
 const app = express();
 app.use(express.json());
@@ -117,6 +119,10 @@ app.delete("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   });
   next();
 })
+/** In below post request cleaner way to use express validation is to use checkSchema() function where pass the schema like i have creates a schema in utils/validationSchemas.mjs file which can be imported and use in checkSchema(createUserSchema) and this will validate the request body by getting the data it need from the schema object
+ * ex: replace "[ check("userName").exists().isString().notEmpty(), check("displayName").exists().isString().notEmpty()]" ====> with "checkSchema(createUserSchema);"
+ */
+
 
 app.post("/users", [
   check("userName")
@@ -134,6 +140,9 @@ app.post("/users", [
     return res.status(400).json({ errors: errors.array() });
   }
 
+  const data = matchedData(req);
+  console.log(data);
+  
   const id = mockUserData.length + 1;
   const newUser = {id : id, ...newUserSchema.parse(req.body)};
   mockUserData.push(newUser);

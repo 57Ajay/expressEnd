@@ -1,7 +1,7 @@
 import express from "express";
 import { object, string } from "zod";
-import { check, validationResult, query } from "express-validator";
-
+import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
+import { createUserSchema } from './utils/validationSchemas.mjs'
 
 const app = express();
 app.use(express.json());
@@ -70,7 +70,8 @@ app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   next();
 });
 
-app.get("/api/users", query("filter").isString().notEmpty().optional(), query("value").isString().notEmpty().isLength({min: 1}).optional(), (req, res, next) => {
+app.get("/api/users", checkSchema(createUserSchema), (req, res, next) => {
+  try{
   const errors = validationResult(req);
   console.log(errors);
   const {query: {filter, value}} = req;
@@ -81,23 +82,20 @@ app.get("/api/users", query("filter").isString().notEmpty().optional(), query("v
     example: "/api/users?filter=userName&value=John"});
 
   if (filter && value) return res.send(mockUserData.filter((user)=> user[filter].toLowerCase().includes(value.toLowerCase())));
+  }catch(err){
+    res.status(400).send(err);
+  }
   next();
 });
 
-app.post("/users", [
-  check("userName")
-    .exists()
-    .isString()
-    .notEmpty(),
-  check("displayName")
-    .exists()
-    .isString()
-    .notEmpty(),
-], duplicateCheckMiddleware, (req, res, next) => {
+app.post("/users", checkSchema(createUserSchema), duplicateCheckMiddleware, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
+  const data = matchedData(req);
+  console.log(data);
 
   const id = mockUserData.length + 1;
   const newUser = {id : id, ...newUserSchema.parse(req.body)};
