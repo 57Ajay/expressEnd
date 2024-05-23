@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { mockUserData} from "../utils/constants.mjs";
-
 import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
 import { createUserSchema } from "../utils/validationSchemas.mjs";
 import { loggingMiddleware } from "../middlewares/usersMiddlewares/loggingMiddleware.mjs";
@@ -15,8 +14,16 @@ router.get("/users", loggingMiddleware, (req, res) => {
 });
   
 router.get("/api/users",loggingMiddleware, checkSchema(createUserSchema), (req, res) => {
-    const errors = validationResult(req);
+    const errors = validationResult(req); 
     console.log(errors);
+
+    console.log(req.session.id);
+    req.sessionStore.get(req.session.id, (err, sessionData) => {
+        if (err) {console.log(err); throw err};
+        console.log(sessionData);
+    });
+
+
     const {query: {filter, value}} = req;
     if (!filter && !value) return res.send(mockUserData);
     if (!filter || !value) return res.json({
