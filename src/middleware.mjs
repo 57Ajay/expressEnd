@@ -4,7 +4,7 @@ import express from "express";
 import { object, string } from "zod";
 import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
 import { createUserSchema } from './utils/validationSchemas.mjs'
-
+import { mockUserData } from './utils/constants.mjs'
 
 const app = express();
 app.use(express.json());
@@ -48,18 +48,6 @@ const duplicateCheckMiddleware = (req, res, next)=>{
   next();
 };
 
-const mockUserData =[
-  {id: 1, userName: "James", displayName: "James"},
-  {id: 2, userName: "William", displayName: "william"},
-  {id: 3, userName: "John", displayName: "John"},
-  {id: 4, userName: "Johnny", displayName: "johnny"},
-  {id: 5, userName: "jimmy", displayName: "jimmy"},
-  {id: 6, userName: "Doe", displayName: "Doe"},
-  {id: 7, userName: "Jane", displayName: "Jane"},
-  {id: 8, userName: "Chris", displayName: "Chris"},
-  {id: 9, userName: "Tony", displayName: "Tony"},
-  {id: 10, userName: "Laura", displayName: "Laura"},
-];
 
 app.get("/users", loggingMiddleware, (req, res) => {
   res.json(mockUserData);
@@ -72,7 +60,9 @@ app.get("/users/:id", resolveIndexByUserId, (req, res, next)=>{
   next();
 });
 
-app.get("/api/users", query("filter").isString().notEmpty().optional(), query("value").isString().notEmpty().isLength({min: 1}).optional(), (req, res, next) => {
+/** replaced "[ check("userName").exists().isString().notEmpty(), check("displayName").exists().isString().notEmpty()]" ====> with [checkSchema(createUserSchema)] */
+
+app.get("/api/users", checkSchema(createUserSchema), (req, res, next) => {
   const errors = validationResult(req);
   console.log(errors);
   const {query: {filter, value}} = req;
@@ -124,16 +114,7 @@ app.delete("/users/:id", resolveIndexByUserId, (req, res, next)=>{
  */
 
 
-app.post("/users", [
-  check("userName")
-    .exists()
-    .isString()
-    .notEmpty(),
-  check("displayName")
-    .exists()
-    .isString()
-    .notEmpty(),
-], duplicateCheckMiddleware, (req, res, next) => {
+app.post("/users", checkSchema(createUserSchema), duplicateCheckMiddleware, (req, res, next) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
