@@ -3,13 +3,14 @@ import { mockUserData} from "../utils/constants.mjs";
 import { object, string } from "zod";
 import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
 import { createUserSchema } from "../utils/validationSchemas.mjs";
-
-const router = Router();
-
 const newUserSchema = object({
     userName: string(),
     displayName: string(),
 });
+
+const router = Router();
+
+
 
 const loggingMiddleware = (req, res, next) => {
     console.log(`${req.method} - ${req.url}`);
@@ -37,16 +38,20 @@ const loggingMiddleware = (req, res, next) => {
     const {body: newUser} = req;
     const duplicate = mockUserData.find((user)=> user.userName === newUser.userName);
     if(duplicate){
-      res.sendStatus(409);
+      res.status(409).json({msg: "User already exists",
+      context: "userName and displayName should be unique",
+      });
       console.log("duplicate");
       return;
     }
     next();
-  };
+};
   
+router.get("/users", loggingMiddleware, (req, res) => {
+    res.json(mockUserData);
+});
   
-  
-router.get("/api/users", checkSchema(createUserSchema), (req, res) => {
+router.get("/api/users",loggingMiddleware, checkSchema(createUserSchema), (req, res) => {
     const errors = validationResult(req);
     console.log(errors);
     const {query: {filter, value}} = req;
@@ -60,4 +65,37 @@ router.get("/api/users", checkSchema(createUserSchema), (req, res) => {
     next();
 });
 
-export default router
+router.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
+    const { findUserIndex } = req;
+    res.json(mockUserData[findUserIndex]);
+});
+
+
+router.put("/api/users/:id", resolveIndexByUserId, (req, res, next) => {
+    const { findUserIndex } = req;
+    const result = newUserSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.issues });
+    }
+    const { userName, displayName } = result.data;
+    const userToBeUpdated = mockUserData[findUserIndex];
+    mockUserData[findUserIndex] = { id: parseInt(req.params.id), userName, displayName };
+    res.status(200).json({
+      msg: "User updated",
+      userToBeUpdated: userToBeUpdated,
+      newUpdatedUserData: mockUserData[findUserIndex],
+    });
+    next();
+});
+
+router.post("/api/users", duplicateCheckMiddleware, (req, res)=>{
+    const body  = newUserSchema.safeParse(req.body);
+    if(!body.success) return res.status(400).json({errors: body.error.issues});
+    mockUserData.push({id: mockUserData.length + 1, ...body.data});
+    res.status(201).json({msg:"User created", data: body.data});
+});
+
+
+
+export default router;
