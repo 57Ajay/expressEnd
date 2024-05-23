@@ -15,12 +15,22 @@ Welcome to the Express.js repository! This repository contains comprehensive res
     - Working with Databases
     - Authentication and Authorization
 4. Projects
-    - Book Store
-    - 
+    - ### [Applications](#applications)
+  - [Bookstore](#bookstore)
+  - [User Data](#userdata)
+- [Routes](#routes)
+  - [GET](#get)
+  - [POST](#post)
+  - [PUT](#put)
+  - [PATCH](#patch)
+  - [DELETE](#delete)
+- [Error Handling](#error-handling)
 
 ## Getting Started with Express.js
 
 To get started with Express.js, you'll need to have Node.js installed on your machine. Once you have Node.js installed, you can install Express using the following command:
 
 ```bash
-npm install express
+1. git clone https://github.com/57Ajay/expressEnd
+2. cd expressend
+3. npm install express
