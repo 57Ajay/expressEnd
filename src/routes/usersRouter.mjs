@@ -1,51 +1,14 @@
 import { Router } from "express";
 import { mockUserData} from "../utils/constants.mjs";
-import { object, string } from "zod";
+
 import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
 import { createUserSchema } from "../utils/validationSchemas.mjs";
-const newUserSchema = object({
-    userName: string(),
-    displayName: string(),
-});
+import { loggingMiddleware } from "../middlewares/loggingMiddleware.mjs";
+import { resolveIndexByUserId } from "../middlewares/resolveIndexByUserId.mjs";
+import { duplicateCheckMiddleware } from "../middlewares/duplicateCheckMiddleware.mjs";
+import { newUserSchema } from "../schemas/newUserSchema.mjs";
 
 const router = Router();
-
-
-
-const loggingMiddleware = (req, res, next) => {
-    console.log(`${req.method} - ${req.url}`);
-    next();
-  };
-  
-  /** A Middleware which gets user index whose id is 
-   * same as the id in the url this middleware will pass that index
-   * to the next middleware or the url with which it was called
-   */
-  
-  const resolveIndexByUserId = (req, res, next)=>{
-    const {params: {id}} = req;
-    const parsedId = parseInt(id);
-    if (isNaN(parsedId)) return res.sendStatus(400);
-    const findUserIndex = mockUserData.findIndex((user) => user.id === parsedId);
-    if (findUserIndex === -1) return res.sendStatus(404);
-    req.findUserIndex = findUserIndex;
-    next();
-  };
-  
-  /** A middleware which checks if the user already exists */
-  
-  const duplicateCheckMiddleware = (req, res, next)=>{
-    const {body: newUser} = req;
-    const duplicate = mockUserData.find((user)=> user.userName === newUser.userName);
-    if(duplicate){
-      res.status(409).json({msg: "User already exists",
-      context: "userName and displayName should be unique",
-      });
-      console.log("duplicate");
-      return;
-    }
-    next();
-};
   
 router.get("/users", loggingMiddleware, (req, res) => {
     res.json(mockUserData);
@@ -96,6 +59,23 @@ router.post("/api/users", duplicateCheckMiddleware, (req, res)=>{
     res.status(201).json({msg:"User created", data: body.data});
 });
 
+router.delete("/api/users/:id", resolveIndexByUserId, (req, res)=>{
+    const { findUserIndex } = req;
+    const userToBeDeleted = mockUserData[findUserIndex];
+    mockUserData.splice(findUserIndex, 1);
+    res.status(200).json({msg: "User deleted",
+    deletedUser: userToBeDeleted,
+    });
+});
 
+router.patch("/api/users/:id", resolveIndexByUserId, (req, res)=>{
+    const { findUserIndex } = req;
+    const userToBeUpdated = mockUserData[findUserIndex];
+    mockUserData[findUserIndex] = { ...userToBeUpdated, ...req.body };
+    res.status(200).json({msg: "User updated",
+    userToBeUpdated: userToBeUpdated,
+    newUpdatedUserData: mockUserData[findUserIndex],
+    });
+});
 
 export default router;
