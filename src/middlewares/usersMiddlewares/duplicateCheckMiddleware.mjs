@@ -1,5 +1,5 @@
  /** A middleware which checks if the user already exists */
-import { mockUserData } from "../utils/constants.mjs";
+import { mockUserData } from "../../utils/constants.mjs";
 
 export const duplicateCheckMiddleware = (req, res, next)=>{
     const {body: newUser} = req;

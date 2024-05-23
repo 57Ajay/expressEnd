@@ -1,10 +1,18 @@
 import express from 'express';
-import usersRouter from './routes/usersRouter.mjs';
+import routes from './routes/index.mjs';
+import cookieParser from 'cookie-parser';
+
 
 const app = express(); 
-const port = 3000;
+app.use(cookieParser("Ajay"));
+const port = process.env.PORT || 3000;
 
 app.use(express.json())
-app.use(usersRouter);
+app.use(routes);
+
+app.get('/', (req, res) => {
+    res.cookie("hello", "world", {maxAge: 100000, httpOnly: true, signed: true}).send("Hello World");
+
+});
 
 app.listen(port, () => console.log(`Server is listening on port ${port}`));

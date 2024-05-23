@@ -2,7 +2,7 @@
    * same as the id in the url this middleware will pass that index
    * to the next middleware or the url with which it was called
 */
-import { mockUserData } from "../utils/constants.mjs";
+import { mockUserData } from "../../utils/constants.mjs";
 export const resolveIndexByUserId = (req, res, next)=>{
     const {params: {id}} = req;
     const parsedId = parseInt(id);

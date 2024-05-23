@@ -3,9 +3,9 @@ import { mockUserData} from "../utils/constants.mjs";
 
 import { check, validationResult, query, body, matchedData, checkSchema } from "express-validator";
 import { createUserSchema } from "../utils/validationSchemas.mjs";
-import { loggingMiddleware } from "../middlewares/loggingMiddleware.mjs";
-import { resolveIndexByUserId } from "../middlewares/resolveIndexByUserId.mjs";
-import { duplicateCheckMiddleware } from "../middlewares/duplicateCheckMiddleware.mjs";
+import { loggingMiddleware } from "../middlewares/usersMiddlewares/loggingMiddleware.mjs";
+import { resolveIndexByUserId } from "../middlewares/usersMiddlewares/resolveIndexByUserId.mjs";
+import { duplicateCheckMiddleware } from "../middlewares/usersMiddlewares/duplicateCheckMiddleware.mjs";
 import { newUserSchema } from "../schemas/newUserSchema.mjs";
 
 const router = Router();
